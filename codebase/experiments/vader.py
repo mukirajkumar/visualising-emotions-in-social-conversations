@@ -81,10 +81,9 @@ for link in video_links:
             # Assign the sentiment with the highest score as the predicted sentiment
             pred_sentiment = max(sentimentData_sentence1.items(), key=operator.itemgetter(1))[0]
 
-            # Append the results to the output DataFrame
-            # Append the results to the output DataFrame
-            result_df = pd.concat([result_df, pd.DataFrame({"Comment": [comment], "Pred_sentiment": [pred_sentiment]})], axis=1, ignore_index=True)
-
+            # Add new columns to the result_df DataFrame
+            result_df["Comment"] = comment
+            result_df["Pred_sentiment"] = pred_sentiment
 
 # Save the output DataFrame to a new CSV file
 result_df.to_csv('comments_output_vader.csv', sep=";", index=False)
