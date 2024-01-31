@@ -68,6 +68,11 @@ video_links = [
 # Initialize an empty DataFrame for the output
 result_df = pd.DataFrame(columns=["Comment", "Pred_sentiment"])
 
+data_list = {}
+
+# Initialize a list to store comments and corresponding sentiments
+data_list = []
+
 # Iterate over video links, get comments, and perform sentiment analysis
 for link in video_links:
     video_id = extract_video_id(link)
@@ -81,10 +86,13 @@ for link in video_links:
             # Assign the sentiment with the highest score as the predicted sentiment
             pred_sentiment = max(sentimentData_sentence1.items(), key=operator.itemgetter(1))[0]
 
-            # Add new columns to the result_df DataFrame
-            result_df["Comment"] = comment
-            result_df["Pred_sentiment"] = pred_sentiment
+            # Append a list to data_list
+            data_list.append([comment, pred_sentiment])
+
+# Create DataFrame from the list of lists
+result_df = pd.DataFrame(data_list, columns=["Comment", "Pred_sentiment"])
+
 
 # Save the output DataFrame to a new CSV file
-result_df.to_csv('comments_output_vader.csv', sep=";", index=False)
+result_df.to_csv('data/comments_output_vader.csv', sep=";", index=False)
 print('Comments and sentiment saved to comments_output_vader.csv')
