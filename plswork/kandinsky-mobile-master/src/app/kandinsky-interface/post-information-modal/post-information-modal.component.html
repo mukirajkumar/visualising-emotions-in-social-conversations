@@ -1,0 +1,48 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Information
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">
+        <ion-icon slot="icon-only" name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content class="p-4">
+  <ion-list lines="none">
+    <ion-item>
+      <ion-label position="stacked">Title</ion-label>
+      <ion-textarea class="small" color="medium" readonly [value]="post.content"></ion-textarea>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Date Published</ion-label>
+      <ion-input class="small" color="medium" readonly value="{{ post.publishTimestamp | amDateFormat:'D MMMM YYYY h:mm A' }}"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">First Comment</ion-label>
+      <ion-input class="small" color="medium" readonly value="{{ post.metadata.comments.firstTimestamp | amDateFormat:'D MMMM YYYY h:mm A' }}"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Last Comment</ion-label>
+      <ion-input class="small" color="medium" readonly value="{{ post.metadata.comments.lastTimestamp | amDateFormat:'D MMMM YYYY h:mm A' }}"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Total Comments</ion-label>
+      <ion-input class="small" color="medium" readonly value="{{ post.metadata.comments.actualCount }}"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Source</ion-label>
+      <ion-input class="small" color="medium" readonly [value]="post.platform"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">Date Extracted</ion-label>
+      <ion-input class="small" color="medium" readonly value="{{ post.metadata.createTimestamp | amDateFormat:'D MMMM YYYY h:mm A' }}"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label position="stacked">URL</ion-label>
+      <ion-input class="small" color="medium" readonly [value]="post.sourceUrl"></ion-input>
+    </ion-item>
+  </ion-list>
+</ion-content>
