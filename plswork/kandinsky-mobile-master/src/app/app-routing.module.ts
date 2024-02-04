@@ -10,6 +10,10 @@ const routes: Routes = [
   {
     path: 'post-menu',
     loadChildren: () => import('./post-menu/post-menu.module').then( m => m.PostMenuPageModule)
+  },
+  {
+    path: 'sentiment-analysis',
+    loadChildren: () => import('./sentiment-analysis/sentiment-analysis').then(m => m.SentimentAnalysisPageModule)
   }
 ];
 

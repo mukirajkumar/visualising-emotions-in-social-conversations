@@ -14,26 +14,7 @@ import numpy as np
 from scipy.special import softmax
 from transformers import DistilBertTokenizerFast
 
-# # List of YouTube video links
-# video_links = [
-#     'https://www.youtube.com/watch?v=gUfh3Wab5gc',
-# ]
 
-# # Replace with your YouTube API key
-# API_KEY = 'AIzaSyB6JGuL-ZBjktdi_viZAdwo-xvJnNVGNz8'
-
-
-# ROBERTA_MODEL = f"cardiffnlp/twitter-roberta-base-sentiment-latest"
-# DISTILBERT_MODEL = f"AdamCodd/distilbert-base-uncased-finetuned-sentiment-amazon"
-# rb_tokenizer = AutoTokenizer.from_pretrained(ROBERTA_MODEL)
-# db_tokenizer = AutoTokenizer.from_pretrained(DISTILBERT_MODEL)
-# # PT
-# rb_model = AutoModelForSequenceClassification.from_pretrained(ROBERTA_MODEL)
-# db_model = AutoModelForSequenceClassification.from_pretrained(DISTILBERT_MODEL)
-# rb_config = AutoConfig.from_pretrained(ROBERTA_MODEL)
-# db_config = AutoConfig.from_pretrained(DISTILBERT_MODEL)
-
-# Function to extract video ID from YouTube video link
 def extract_video_id(link):
     video_id_match = re.search(r'(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})', link)
     if video_id_match:
@@ -71,8 +52,6 @@ def get_video_comments(api_key, video_id):
     print("Comments retrieved successfully for video: ", video_id)
     return comments
 
-# # Initialize the sentiment analyzer
-# analyser = SentimentIntensityAnalyzer()
 
 # Function to perform sentiment analysis using VADER
 def sentiment_analyzer_scores(sentence, model1, model2, model1_tokeniser, model2_tokeniser, rb_config, db_config, analyser):
@@ -97,67 +76,3 @@ def sentiment_analyzer_scores(sentence, model1, model2, model1_tokeniser, model2
 
 
     return vader_result, rb_result, db_result
-# # Initialize an empty DataFrame for the output
-# result_df = pd.DataFrame(columns=["Comment", "Pred_sentiment"])
-
-# data_list = {}
-
-# # Initialize a list to store comments and corresponding sentiments
-# data_list = []
-
-# # Iterate over video links, get comments, and perform sentiment analysis
-# for link in video_links:
-#     vader_cnt_neu = 0
-#     vader_cnt_neg = 0
-#     vader_cnt_pos = 0
-#     rb_cnt_neu = 0
-#     rb_cnt_neg = 0
-#     rb_cnt_pos = 0
-#     db_cnt_neu = 0
-#     db_cnt_neg = 0
-#     db_cnt_pos = 0
-
-#     video_id = extract_video_id(link)
-#     if video_id:
-#         comments = get_video_comments(API_KEY, video_id)
-#         #comments = ["Covid cases are increasing fast!", "This product doesn't fit me at all."]
-#         for comment in comments:
-#             print("Comment: ", comment)
-#             vader_result, rb_result, db_result = sentiment_analyzer_scores(comment, rb_model, db_model, rb_tokenizer, db_tokenizer)
-            
-#             print("VADER Result: ", vader_result)
-#             print("RoBERTa Result: ", rb_result)
-#             print("DistilBERT Result: ", db_result)
-
-#             if vader_result == "neu":
-#                 vader_cnt_neu += 1
-#             if vader_result == "neg":
-#                 vader_cnt_neg +=1
-#             if vader_result == "pos":
-#                 vader_cnt_pos += 1
-
-#             if rb_result == "neutral":
-#                 rb_cnt_neu += 1
-#             if rb_result =="negative":
-#                 rb_cnt_neg += 1
-#             if rb_result == "positive":
-#                 rb_cnt_pos += 1
-
-#             if db_result == "neutral":
-#                 db_cnt_neu += 1
-#             if db_result =="negative":
-#                 db_cnt_neg += 1
-#             if db_result == "positive":
-#                 db_cnt_pos += 1
-#         results_dict = {"vader": [vader_cnt_neg, vader_cnt_neu, vader_cnt_pos],
-#                         "roberta": [rb_cnt_neg, rb_cnt_neu, rb_cnt_pos],
-#                         "distilbert": [db_cnt_neg, db_cnt_neu, db_cnt_pos]}
-#         print(results_dict)
-            
-# # Create DataFrame from the list of lists
-# result_df = pd.DataFrame(data_list, columns=["Comment", "Pred_sentiment"])
-
-
-# # Save the output DataFrame to a new CSV file
-# result_df.to_csv('data/comments_output_vader.csv', sep=";", index=False)
-# print('Comments and sentiment saved to comments_output_vader.csv')
