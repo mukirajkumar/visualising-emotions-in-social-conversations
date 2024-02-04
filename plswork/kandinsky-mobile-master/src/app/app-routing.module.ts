@@ -13,7 +13,7 @@ const routes: Routes = [
   },
   {
     path: 'sentiment-analysis',
-    loadChildren: () => import('./sentiment-analysis/sentiment-analysis').then(m => m.SentimentAnalysisPageModule)
+    loadChildren: () => import('./sentiment-analysis/sentiment-analysis.module').then(m => m.SentimentAnalysisPageModule)
   }
 ];
 

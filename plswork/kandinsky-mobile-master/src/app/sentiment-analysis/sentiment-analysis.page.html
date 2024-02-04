@@ -1,0 +1,18 @@
+<!-- new-page.page.html -->
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      New Page
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-item>
+    <ion-label position="stacked">YouTube URL</ion-label>
+    <ion-input [(ngModel)]="youtubeUrl" placeholder="Enter YouTube URL"></ion-input>
+  </ion-item>
+
+  <ion-button expand="full" (click)="sendToApi()">Send to API</ion-button>
+</ion-content>
+
