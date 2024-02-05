@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline Chart</title>
+    <style>
+        body {
+            background-color: #1a1a1a; /* Dark background color */
+            color: #ffffff; /* White text color */
+        }
+
+        .tab-space {
+            margin-right: 165px; /* Adjust the margin as needed */
+        }
+    </style>
+    <!-- Include Chart.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Create a canvas element where the chart will be rendered -->
+    <canvas id="timelineChart" width="800" height="400"></canvas>
+
+    <!-- Custom legend -->
+    <div id="legend" style="margin-top: 10px; margin-left: 500px; margin-right: 500px; padding: 10px; background: linear-gradient(to right, red, yellow, green); text-align: center;" >
+    </div>
+    <span>
+        <div style="margin-top: 10px; margin-left: 500px; margin-right: 500px;">Negative<span class="tab-space"></span>Neutral<span class="tab-space"></span>Positive</div>
+    </span>
+    
+    <!-- Include the compiled TypeScript file -->
+    <script src="timelineChart.js"></script>
+</body>
+</html>

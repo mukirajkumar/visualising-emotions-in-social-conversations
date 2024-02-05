@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 import openpyxl
 import pandas as pd
@@ -22,13 +23,12 @@ def extract_video_id(link):
     else:
         return None
 
-# Function to get comments for a video using YouTube Data API with pagination
 def get_video_comments(api_key, video_id):
     youtube = build('youtube', 'v3', developerKey=api_key)
     print("Getting comments for video: ", video_id)
-    comments = []
+    comments_with_dates = []
     next_page_token = None
-    
+
     try:
         while True:
             response = youtube.commentThreads().list(
@@ -40,7 +40,13 @@ def get_video_comments(api_key, video_id):
 
             for item in response['items']:
                 comment = item['snippet']['topLevelComment']['snippet']['textDisplay']
-                comments.append(comment)
+                comment_date = item['snippet']['topLevelComment']['snippet']['publishedAt']
+                comment_date = datetime.strptime(comment_date, "%Y-%m-%d").date()
+                
+                comments_with_dates.append({
+                    'comment': comment,
+                    'date': comment_date
+                })
 
             next_page_token = response.get('nextPageToken')
 
@@ -49,30 +55,15 @@ def get_video_comments(api_key, video_id):
 
     except HttpError as e:
         print(f'An HTTP error occurred: {e}')
+    
     print("Comments retrieved successfully for video: ", video_id)
-    return comments
+    return comments_with_dates
 
 
 # Function to perform sentiment analysis using VADER
-def sentiment_analyzer_scores(sentence, model1, model2, model1_tokeniser, model2_tokeniser, rb_config, db_config, analyser):
+def sentiment_analyzer_scores(sentence, analyser):
     vader_score = analyser.polarity_scores(sentence)
-    vader_score.pop("compound")
-    vader_result = max(vader_score.items(), key=operator.itemgetter(1))[0]
-
-    rb_encoded_input = model1_tokeniser(sentence, truncation=True, max_length=511, return_tensors='pt')
-    output = model1(**rb_encoded_input)
-    rb_scores = output[0][0].detach().numpy()
-    rb_scores = softmax(rb_scores)
-    rb_highest_score = np.argmax(rb_scores) 
-    rb_result = rb_config.id2label[rb_highest_score]
-
-    db_encoded_input = model2_tokeniser(sentence, truncation=True, max_length=511, return_tensors='pt')
-    print(db_encoded_input['input_ids'].size())
-    db_output = model2(**db_encoded_input)
-    db_scores = db_output[0][0].detach().numpy()
-    db_scores = softmax(db_scores)
-    db_highest_score = np.argmax(db_scores) 
-    db_result = db_config.id2label[db_highest_score]
-
-
-    return vader_result, rb_result, db_result
+    
+    # Extract and return the compound score
+    compound_score = vader_score["compound"]
+    return compound_score
