@@ -39,14 +39,25 @@ def get_video_comments(api_key, video_id):
             ).execute()
 
             for item in response['items']:
-                comment = item['snippet']['topLevelComment']['snippet']['textDisplay']
-                comment_date = item['snippet']['topLevelComment']['snippet']['publishedAt']
-                comment_date = datetime.strptime(comment_date, "%Y-%m-%d").date()
-                
-                comments_with_dates.append({
-                    'comment': comment,
-                    'date': comment_date
-                })
+                try:
+                    snippet = item.get('snippet', {})  # Use get to handle cases where 'snippet' is not present
+                    topLevelComment = snippet.get('topLevelComment', {}).get('snippet', {})
+                    
+                    comment = topLevelComment.get('textDisplay', '')
+                    comment_date_str = topLevelComment.get('publishedAt', '')
+                    
+                    # Convert the comment date string to a datetime object
+                    comment_date = datetime.strptime(comment_date_str, "%Y-%m-%dT%H:%M:%SZ").date() if comment_date_str else None
+
+                    comments_with_dates.append({
+                        'comment': comment,
+                        'date': comment_date
+                    })
+                except Exception as e:
+                    print("Error accessing properties:", e)
+                    continue  # Skip this iteration if there's an error getting properties of one of the items
+            
+            # Get the token for the next page of results
 
             next_page_token = response.get('nextPageToken')
 

@@ -1,18 +1,65 @@
-<!-- new-page.page.html -->
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      New Page
+      Sentiment Analysis
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
+  <!-- YouTube URL input and button -->
   <ion-item>
     <ion-label position="stacked">YouTube URL</ion-label>
     <ion-input [(ngModel)]="youtubeUrl" placeholder="Enter YouTube URL"></ion-input>
   </ion-item>
-
   <ion-button expand="full" (click)="sendToApi()">Send to API</ion-button>
+
+  <!-- Chart canvas -->
+  <div class="chart-container">
+    <canvas id="timelineChart"></canvas>
+  </div>
+
+  <!-- Custom legend (conditionally displayed) -->
+  <div *ngIf="chartRendered" id="legend" class="legend-container">
+    <!-- Gradient rectangle -->
+    <div class="gradient-rectangle"></div>
+    
+    <!-- Labels -->
+    <div class="label-container">
+      <div class="label">Negative</div>
+      <div class="label tab-space">Neutral</div>
+      <div class="label">Positive</div>
+    </div>
+  </div>
 </ion-content>
 
+<style>
+  .chart-container {
+    margin-top: 10px;
+    margin-left: 100px; /* Adjust the left margin as needed */
+    margin-right: 100px; /* Adjust the right margin as needed */
+    width: 80%; /* Set the width to 80% of the viewport */
+    height: 80vh; /* Set the height to 80% of the viewport height */
+  }
+  .legend-container {
+    margin-top: 10px;
+    margin-left: 500px;
+    margin-right: 500px;
+    text-align: center;
+  }
+  .gradient-rectangle {
+    background: linear-gradient(to right, red, yellow, green);
+    padding: 10px;
+  }
+  .label-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+  }
+  .label {
+    font-size: 12px; /* Adjust the font size as needed */
+  }
+  .tab-space {
+    margin-right: 130px;
+  }
+</style>

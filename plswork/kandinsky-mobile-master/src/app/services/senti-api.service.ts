@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = 'YOUR_PYTHON_API_URL';
+  private apiUrl = 'http://127.0.0.1:5000/api/youtube_sentiment';
 
   constructor(private http: HttpClient) { }
 
