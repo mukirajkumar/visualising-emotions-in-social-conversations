@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { NgModule, Component, Input, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { Circle, CanvasComponent, ConcentricCircleDatum, CircleDatum } from './canvas/canvas.component';
 import { SocialComment, SocialPlatform, SocialPost } from '../models/models';
 import { IonDatetime, ActionSheetController, ModalController, AlertController, IonSearchbar, LoadingController, NavController } from '@ionic/angular';
@@ -11,43 +11,39 @@ import * as d3 from 'd3';
 import { SpectrumRange, SpectrumInterval } from './spectrum-controls/spectrum-controls.component';
 import { HighlightOption } from '../highlight.pipe';
 import { ActivatedRoute } from '@angular/router';
+import { SentimentsService } from '../services/sentiments.service';
+import { RadarChartComponent } from '../sentiment-visualisation/sentiment-visualisation.component';
 
 @Component({
   selector: 'ksky-kandinsky-interface',
   templateUrl: './kandinsky-interface.page.html',
   styleUrls: ['./kandinsky-interface.page.scss'],
 })
+
+@NgModule({
+  declarations: [
+    RadarChartComponent
+  ],
+
+})
+
 export class KandinskyInterfacePage implements OnInit {
-
-  // loading overlay
   loading: HTMLIonLoadingElement;
-
-  // interface
   post: SocialPost;
-
-  // canvas
   circles: Circle[];
   timestamp: number = 0;
-
-  // timeline controls
   progress: number = -1;
   maxProgress = 100;
   readonly STEP = 1;
   readonly PLAY_INTERVAL_MS = 100;
-
-  // spectrum controls
   spectrum: boolean = false;
   spectrumIntervals: SpectrumInterval[];
   spectrumRange: SpectrumRange;
   spectrumStartTime: number;
   spectrumEndTime: number;
-
-  // search
   focus: boolean = false;
   searchQuery: string = '';
   searchResults: SearchResult[];
-
-  // comments
   selectedCircle: ConcentricCircleDatum;
   showComments: boolean = false;
   visibleCommentsCount: number = 0;
@@ -55,18 +51,15 @@ export class KandinskyInterfacePage implements OnInit {
   groupedCommentsByTimestamp: CommentGroupInterval[];
   readonly MAX_COMMENT_BAR_WIDTH = 10;
   readonly MIN_COMMENT_BAR_WIDTH = 1;
-
-  // similar comments
   showSimilarComments: boolean = false;
   minimizeReferenceComment: boolean = true;
   visibleSimilarCommentsCount: number = 0;
-
-  // comment item contexts (used to display comments)
-  // used to avoid angular's change detection calling the buidlcontext multiple times
   commentContext: CommentItemContext;
   commentRepliesContexts: CommentItemContext[];
   referenceCommentContext: CommentItemContext;
   similarCommentsContexts: CommentItemContext[];
+  @Input() sentimentScores: number[];
+
 
   @ViewChild('timelineControls', { static: false })
   timelineControls: TimelineControlsComponent;
@@ -79,9 +72,13 @@ export class KandinskyInterfacePage implements OnInit {
 
   @ViewChild('searchbar', { static: false })
   searchbar: IonSearchbar;
+  showRadarChart: boolean;
+
+  
 
   constructor(
     private kandinskyService: KandinskyService,
+    private sentimentsService: SentimentsService,
     private actionSheetController: ActionSheetController,
     private modalController: ModalController,
     private alertController: AlertController,
@@ -91,6 +88,7 @@ export class KandinskyInterfacePage implements OnInit {
   ) {
   }
 
+  
   async presentMenuActionSheet() {
     const actionSheet = await this.actionSheetController.create({
       buttons: [
@@ -253,6 +251,8 @@ export class KandinskyInterfacePage implements OnInit {
     }
   }
 
+ 
+
   spectrumRangeChange() {
 
     const lowerGroupIndex = this.spectrumRange.lower === -1 ? 0 : this.spectrumRange.lower;
@@ -277,8 +277,6 @@ export class KandinskyInterfacePage implements OnInit {
     }
 
     this.canvas.setHighlighted(commentIds);
-
-    // timeout because of race condition when propagating highlight changes to canvas
     setTimeout(() => this.updateCommentContexts());
 
   }
@@ -326,6 +324,8 @@ export class KandinskyInterfacePage implements OnInit {
     }
 
     this.selectedCircle = circle;
+    this.sentimentScores = this.getSentimentScores(circle);
+    console.log("Sentiment Scores:", this.sentimentScores);
 
     if (!this.selectedCircle) {
       this.showComments = false;
@@ -342,18 +342,87 @@ export class KandinskyInterfacePage implements OnInit {
     if (this.timelineControls && this.timelineControls.playing) {
       this.timelineControls.pause();
     }
-
-    // build colored border width scale from circle
     this.barWidthScale = this.buildBarWidthScaleFromCircle(circle);
-    
-    // scroll up if there are comments for this circle
     if (this.commentsList) {
       this.commentsList.nativeElement.scrollTop = 0;
     }
 
     this.commentContext = this.buildCommentItemContext(circle.pivot);
     this.commentRepliesContexts = circle.pivot.children.map(c => this.buildCommentItemContext(c));
+    console.log("selectCircle function is done")
   }
+  async openSentimentAnalysisModal() {
+    console.log("enters openSentimentAnalysisModal");
+    await this.selectCircle(this.selectedCircle);
+    const chartData = {
+        labels: ['Negative', 'Neutral', 'Positive', 'Overall'],
+        datasets: []
+    };
+    for (let i = 0; i < this.sentimentScores.length; i += 4) {
+        const commentSentiments = this.sentimentScores.slice(i, i + 4);
+        const label = `Comment ${i / 4 + 1}`;
+        chartData.datasets.push({
+            label: label,
+            data: commentSentiments,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderWidth: 2
+        });
+    }
+    const modal = await this.modalController.create({
+        component: RadarChartComponent,
+        componentProps: {
+            chartData: chartData
+        }
+    });
+    
+    console.log("modal presented");
+    return await modal.present(); 
+}
+
+
+  
+  getSentimentScores(circle: ConcentricCircleDatum): number[] {
+    const sentimentScores: number[] = [];
+    if (circle.pivot && circle.pivot.data && circle.pivot.data.sentiments && circle.pivot.data.sentiments.sentiment) {
+        const sentiment = circle.pivot.data.sentiments.sentiment;
+        if (sentiment.neg_sentimentScore != null) {
+            sentimentScores.push(sentiment.neg_sentimentScore);
+        }
+        if (sentiment.neu_sentimentScore != null) {
+            sentimentScores.push(sentiment.neu_sentimentScore);
+        }
+        if (sentiment.pos_sentimentScore != null) {
+            sentimentScores.push(sentiment.pos_sentimentScore);
+        }
+        if (sentiment.compound_sentimentScore != null) {
+          sentimentScores.push(sentiment.compound_sentimentScore);
+      }
+    }
+    if (circle.pivot && circle.pivot.children) {
+        circle.pivot.children.forEach(comment => {
+            if (comment.data && comment.data.sentiments && comment.data.sentiments.sentiment) {
+                const sentiment = comment.data.sentiments.sentiment;
+                if (sentiment.neg_sentimentScore != null) {
+                  sentimentScores.push(sentiment.neg_sentimentScore);
+              }
+              if (sentiment.neu_sentimentScore != null) {
+                  sentimentScores.push(sentiment.neu_sentimentScore);
+              }
+              if (sentiment.pos_sentimentScore != null) {
+                  sentimentScores.push(sentiment.pos_sentimentScore);
+              }
+              if (sentiment.compound_sentimentScore != null) {
+                sentimentScores.push(sentiment.compound_sentimentScore);
+            }
+            }
+        });
+    }
+    return sentimentScores;
+}
+
+async closeModal() {
+  await this.modalController.dismiss();
+}
 
   buildBarWidthScaleFromCircle(circle: ConcentricCircleDatum) {
 
@@ -382,18 +451,12 @@ export class KandinskyInterfacePage implements OnInit {
   countVisibleComments(circles: CircleDatum[]) {
     return circles.filter(c => this.canDisplayComment(c)).length;
   }
-
-  // called by timeline controls on change
   updateTimestamp(progress: number) {
-
-    // timeout because of race condition when propagating timestamp to canvas
     setTimeout(() => {
 
       this.updateCommentContexts();
 
       if (this.selectedCircle) {
-
-        // if selected circle disappears, unselect the selected circle
         if (!this.selectedCircle.isDisplayed) {
 
           if (this.showSimilarComments) {
@@ -416,7 +479,7 @@ export class KandinskyInterfacePage implements OnInit {
   private mapCommentToCircle(comment: SocialComment): Circle {
     return {
       id: comment.id,
-      colorReference: comment.authorName,
+      colorReference: comment.sentiments.sentiment.compound_sentimentScore,
       children: comment.comments.map(c => this.mapCommentToCircle(c)),
       value: comment.likeCount,
       data: comment,
@@ -433,8 +496,6 @@ export class KandinskyInterfacePage implements OnInit {
 
     const commentIds = this.searchResults.map(r => r.commentId);
     this.canvas.setFocused(commentIds);
-
-    // update the highlightOptions of visible comments
     const commentContextsToUpdate: CommentItemContext[] = [];
 
     if (this.showComments) {
@@ -450,8 +511,6 @@ export class KandinskyInterfacePage implements OnInit {
       .forEach(c => {
 
         const match = this.searchResults.find(r => r.commentId === c.context.comment.id);
-
-        // must replace list of highlightOptions to trigger change detection and call highlight pipe
         c.context.display.highlightOptions = [
           c.context.display.highlightOptions[0],
           {
@@ -476,8 +535,6 @@ export class KandinskyInterfacePage implements OnInit {
     const result = this.searchResults ? this.searchResults.find(r => r.commentId === circle.circleId) : null;
     const comment: SocialComment = circle.data;
     const totalReplyCount = circle.children.length > 0 ? this.countVisibleComments(circle.children) : 0;
-
-    // extract indices to highlight topic terms
     const topicIndices = [].concat.apply([], [...Object.values(comment.analytics.similarity.topics)].map(t => t.indices));
     
     return {
@@ -516,12 +573,20 @@ export class KandinskyInterfacePage implements OnInit {
             showScore: showSimilarityScore,
             score: similarityScore
           }
+        },
+        sentiments: {
+          sentiment: {
+            neg_sentimentScore: comment.sentiments.sentiment.neg_sentimentScore,
+            neu_sentimentScore: comment.sentiments.sentiment.neg_sentimentScore,
+            pos_sentimentScore: comment.sentiments.sentiment.neg_sentimentScore,
+            compound_sentimentScore: comment.sentiments.sentiment.neg_sentimentScore
+
+
+          }
         }
       }
     };
   }
-
-  // called when 'View replies' or 'View as reply to ...' button is clicked in a comment
   selectCircleByPivotId(pivotId: string, targetCircleId: string) {
     this.canvas.selectByPivotId(pivotId);
     setTimeout(() => {
@@ -533,8 +598,6 @@ export class KandinskyInterfacePage implements OnInit {
   }
 
   unselectSimilarityReferenceCircle() {
-
-    // reset bar width scale back to selected circle's context
     this.barWidthScale = this.buildBarWidthScaleFromCircle(this.selectedCircle);
 
     this.showSimilarComments = false;
@@ -543,11 +606,7 @@ export class KandinskyInterfacePage implements OnInit {
   }
 
   selectSimilarityReferenceCircleById(circleId: string) {
-
-    // clear search bar
     this.searchQuery = '';
-
-    // get reference circle from selected concentric circle
     const similarityReferenceCircle = [
       this.selectedCircle.pivot,
       ...this.selectedCircle.pivot.children
@@ -557,12 +616,8 @@ export class KandinskyInterfacePage implements OnInit {
     const similarCommentIds = comment.analytics.similarity.comments.map(c => c.commentId);
 
     const similarCommentCircles = this.canvas.getCircleData(similarCommentIds);
-
-    // rebuild bar witdh scale with values from comment and similar comments
     const values = [comment.likeCount, ...similarCommentCircles.map(d => d.data.likeCount)];
     this.barWidthScale = this.buildBarWidthScale(values);
-
-    // highlight similar circles
     this.canvas.setFocused(similarCommentIds);
 
     this.referenceCommentContext = this.buildCommentItemContext(similarityReferenceCircle, {
@@ -593,7 +648,7 @@ export class KandinskyInterfacePage implements OnInit {
     this.visibleSimilarCommentsCount = this.countVisibleComments(similarCommentCircles);
     this.showSimilarComments = true;
   }
-
+  
 }
 
 type CommentItemContext = {
@@ -621,6 +676,14 @@ type CommentItemContext = {
         similarCommentsCount: number;
         showScore: boolean;
         score: number;
+      }
+    },
+    sentiments: {
+      sentiment:{
+        neg_sentimentScore ?: number
+        neu_sentimentScore ?: number
+        pos_sentimentScore ?: number
+        compound_sentimentScore ?: number
       }
     }
   }

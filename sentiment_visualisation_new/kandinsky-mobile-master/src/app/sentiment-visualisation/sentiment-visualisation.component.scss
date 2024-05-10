@@ -1,0 +1,30 @@
+#radarChartCanvas {
+  width: 1000px; /* Set the desired width */
+  height: 800px; /* Set the desired height */
+}
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chart-controls {
+  margin-top: 20px; /* Adjust as needed */
+}
+
+.sentiment-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.average-sentiment,
+.comment-content {
+  text-align: center;
+  margin-bottom: 10px; /* Adjust as needed */
+  padding: 10px;
+}
+
+.sentiment-icon {
+  font-size: 48px; /* Adjust the font size as needed */
+}

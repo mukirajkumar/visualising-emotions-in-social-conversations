@@ -56,11 +56,14 @@ export class KandinskyService {
       .toPromise()
       .then(async (comments) => {
         if (areCommentsAnalyzed) {
-          return comments;
+          return await socialPlatform.sentimentanalyzeComments(postId);
         }
   
         if (loading) loading.message = 'Running topic modelling and looking for similar comments...';
-        return await socialPlatform.analyzeComments(postId); 
+        await socialPlatform.analyzeComments(postId); 
+        if (loading) loading.message = 'Running sentiment analysis...';
+        return await socialPlatform.sentimentanalyzeComments(postId); // Reference sentimentanalyzeComments function
+
       });
     
     console.timeEnd('preparing data');

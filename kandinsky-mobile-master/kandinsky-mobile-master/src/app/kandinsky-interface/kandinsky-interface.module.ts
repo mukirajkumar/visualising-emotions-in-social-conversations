@@ -24,6 +24,7 @@ import { SanitizeHtmlPipe } from '../sanitize-html.pipe';
   declarations: [
     KandinskyInterfacePage,
     CanvasComponent,
+    RadarChartComponent
     TimelineControlsComponent,
     StatsComponent,
     HighlightPipe,

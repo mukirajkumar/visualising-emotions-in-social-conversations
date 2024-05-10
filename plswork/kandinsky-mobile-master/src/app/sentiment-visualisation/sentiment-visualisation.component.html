@@ -1,0 +1,28 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Radar Chart</ion-title>
+    <ion-buttons slot="end">
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <canvas id="radarChartCanvas"></canvas>
+  <div *ngIf="chartData" class="chart-controls">
+    <!-- Filter dropdown -->
+      <ion-item lines="none">
+        <ion-label>Select Comment</ion-label>
+        <ion-select [(ngModel)]="selectedComment" (ionChange)="filterChartData()" interface="action-sheet">
+          <ion-select-option *ngFor="let comment of allComments" [value]="comment">{{ comment }}</ion-select-option>
+          <ion-select-option value="all">All</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <div class="average-sentiment">
+        <p class="sentiment-score">Average Sentiment Score: {{ averageSentimentScore.toFixed(3) }}</p>
+        <ion-icon class="sentiment-icon" [name]="sentimentIcon"></ion-icon>
+      </div>
+  </div>
+</ion-content>
+
+
+

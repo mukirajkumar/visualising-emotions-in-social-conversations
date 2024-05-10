@@ -48,12 +48,23 @@ export type CommentAnalytics = {
   similarity: {
     comments: SimilarComment[];
     topics: {[k: string]: Topic};
-  }
+  },
 };
+
+export type CommentSentiments ={
+  sentiment:{
+    neg_sentimentScore ?: number,
+    neu_sentimentScore ?: number,
+    pos_sentimentScore ?: number,
+    compound_sentimentScore ?: number
+  }
+}
+
 
 export type SocialComment = Omit<RawSocialComment, 'comments'> & {
   comments: SocialComment[];
   analytics: CommentAnalytics;
+  sentiments: CommentSentiments
 };
 
 export enum SocialPlatform {

@@ -1,10 +1,12 @@
 import { Component, OnInit, OnChanges, SimpleChanges, Input, EventEmitter, Output } from '@angular/core';
+import { AlertController } from '@ionic/angular';
 import { Selection, ScalePower, Simulation, ForceManyBody, ForceLink, ForceX, ForceY, ZoomBehavior } from 'd3';
 import ColorHash from 'color-hash';
 import { customForceCollide } from './force-collide';
 import * as d3 from 'd3';
 import _ from 'lodash';
 import { customForceManyBody } from './force-many-body';
+import { SentimentsService } from 'src/app/services/sentiments.service';
 
 @Component({
   selector: 'ksky-canvas',
@@ -33,7 +35,7 @@ export class CanvasComponent implements OnInit, OnChanges {
 
   @Output()
   ready: EventEmitter<void>;
-
+  sentimentScores: number[] = [];
   lastIndex: number = -1;
 
   readonly SCALE_MULTIPLIER = 0.8;
@@ -87,10 +89,11 @@ export class CanvasComponent implements OnInit, OnChanges {
 
   private colorHash = new ColorHash();
 
-  constructor() {
+  constructor(private sentimentService: SentimentsService, public alertController: AlertController) {
     this.selectedCircleChange = new EventEmitter();
     this.ready = new EventEmitter();
   }
+  
 
   ngOnInit() {
   }
@@ -562,6 +565,12 @@ export class CanvasComponent implements OnInit, OnChanges {
     return `${prefix}_${id}`;
   }
 
+  getColourFromScore(score: number): string {
+    const normalizedScore = (score + 1) / 2;
+    const hue = normalizedScore * 120;
+    return `hsl(${hue}, 80%, 60%)`;
+  }
+
   buildCircleDatum(circle: Circle, radiusOffset: number = 0, isPivot: boolean = true): CircleDatum {
     const radius = this.calculateRadius(circle.value, radiusOffset);
     let childRadiusOffset = radius;
@@ -573,7 +582,7 @@ export class CanvasComponent implements OnInit, OnChanges {
       y: null,
       fx: null,
       fy: null,
-      color: this.colorHash.hex(circle.colorReference),
+      color: this.getColourFromScore(circle.colorReference),
       children: [],
       data: circle.data,
       timestampCue: circle.timestampCue,
@@ -585,21 +594,21 @@ export class CanvasComponent implements OnInit, OnChanges {
       isFocused: false,
       isHighlighted: false
     };
-
     let innerId: string = circleDatum.id;
-    const children = circle.children.map(child => {
-      const childCircleDatum = this.buildCircleDatum(child, childRadiusOffset, false);
+      const children = circle.children.map(child => {
+        const childCircleDatum = this.buildCircleDatum(child, childRadiusOffset, false);
+  
+        childCircleDatum.innerId = innerId;
+        innerId = childCircleDatum.id;
+  
+        childRadiusOffset = childCircleDatum.radius;
+        return childCircleDatum;
+      });
+  
+      circleDatum.children = children;
+  
+      return circleDatum;
 
-      childCircleDatum.innerId = innerId;
-      innerId = childCircleDatum.id;
-
-      childRadiusOffset = childCircleDatum.radius;
-      return childCircleDatum;
-    });
-
-    circleDatum.children = children;
-
-    return circleDatum;
   }
 
   buildConcentricCircleDatum(pivot: CircleDatum, isNucleus: boolean = true, radiusOffset: number = 0, rootId = null, parentId = null): ConcentricCircleDatum {
@@ -702,10 +711,11 @@ export class CanvasComponent implements OnInit, OnChanges {
 
 }
 
+
 export interface Circle {
   id: string;
   value: number;
-  colorReference: string;
+  colorReference: number;
   children: Circle[];
   data: any;
   timestampCue: number;

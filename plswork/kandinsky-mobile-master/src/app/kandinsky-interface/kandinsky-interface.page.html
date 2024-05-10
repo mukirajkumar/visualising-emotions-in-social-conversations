@@ -8,6 +8,7 @@
     [focusMode]="focus"
     (ready)="onCanvasReady()">
   </ksky-canvas>
+  <app-radar-chart *ngIf="chartData" [chartData]="chartData"></app-radar-chart>
   <div class="interface-overlay">
     <div class="interface-header">
       <div class="header-container text-light pl-4 pr-2 pt-4 d-flex justify-content-between">
@@ -122,6 +123,9 @@
         <ion-card class="p-2 my-1">
           <ion-list-header>
             <ion-label>Selected Comments ({{ visibleCommentsCount }}/{{ commentRepliesContexts.length + 1 }})</ion-label>
+            <ion-button fill="clear" color="medium" size="small" (click)="openSentimentAnalysisModal()">
+              <ion-icon name="happy"></ion-icon>
+            </ion-button>
             <ion-button fill="clear" color="medium" size="small" (click)="canvas.unselect()">
               <ion-icon name="close"></ion-icon>
             </ion-button>

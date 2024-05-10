@@ -3,13 +3,15 @@ import { SocialPost, SocialComment, RawSocialPost, RawSocialComment, PostComment
 import { switchMap, map, tap, mapTo } from 'rxjs/operators';
 import * as d3 from 'd3';
 import { AnalyticsService } from '../analytics.service';
+import { SentimentsService } from 'src/app/services/sentiments.service'
 
 export abstract class SocialService {
   
   constructor(
     private analyticsService: AnalyticsService,
     private postStorage: LocalForage,
-    private commentStorage: LocalForage
+    private commentStorage: LocalForage,
+    private sentimentService: SentimentsService
   ) {
   }
   
@@ -62,6 +64,14 @@ export abstract class SocialService {
         similarity: {
           comments: null,
           topics: null
+        }
+      },
+      sentiments: {
+        sentiment: {
+          neg_sentimentScore: null,
+          neu_sentimentScore: null,
+          pos_sentimentScore: null,
+          compound_sentimentScore: null
         }
       }
     };
@@ -157,6 +167,25 @@ export abstract class SocialService {
 
     await this.saveComments(postId, comments, true, true);
     console.timeEnd('analyzing comments');
+    return comments;
+  }
+
+  public async sentimentanalyzeComments(postId: string): Promise<SocialComment[]> {
+    console.time('extracting sentiments');
+    const comments = await this.getCommentsFromStorage(postId);
+    const allComments = this.flattenComments(comments);
+  
+    console.log(`extracting sentiments for comments of post ${postId}`);
+    allComments.forEach(comment => {
+      const sentimentScores = this.sentimentService.analyseSentiments(comment.content);
+      // Extracting sentiment scores from the returned array
+      const [neg_sentimentScore, neu_sentimentScore, pos_sentimentScore, compound_sentimentScore] = sentimentScores;
+      comment.sentiments = { sentiment: { neg_sentimentScore, neu_sentimentScore, pos_sentimentScore, compound_sentimentScore } };
+      console.log(comment.sentiments)
+    });
+  
+    await this.saveComments(postId, comments, true, true);
+    console.timeEnd('extracting sentiments');
     return comments;
   }
 

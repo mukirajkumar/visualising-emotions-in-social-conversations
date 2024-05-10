@@ -3,13 +3,19 @@ import openpyxl
 import pandas as pd
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
 import argparse
 import operator
+import time
+
 
 # Replace with your YouTube API key
 API_KEY = 'AIzaSyB6JGuL-ZBjktdi_viZAdwo-xvJnNVGNz8'
 
+# List of YouTube video links
+video_links = [
+    'https://www.youtube.com/watch?v=gUfh3Wab5gc',
+]
 # Function to extract video ID from YouTube video link
 def extract_video_id(link):
     video_id_match = re.search(r'(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})', link)
@@ -48,51 +54,43 @@ def get_video_comments(api_key, video_id):
     print("Comments retrieved successfully for video: ", video_id)
     return comments
 
-# Initialize the sentiment analyzer
-analyser = SentimentIntensityAnalyzer()
-
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 # Function to perform sentiment analysis using VADER
 def sentiment_analyzer_scores(sentence):
     score = analyser.polarity_scores(sentence)
-    score.pop("compound")
-    return score
+    return score['neg'], score['neu'], score['pos'], score['compound']
 
-# List of YouTube video links
-video_links = [
-    'https://www.youtube.com/watch?v=gUfh3Wab5gc',
-    'https://www.youtube.com/watch?v=QIEDz9ZoTOw',
-    'https://www.youtube.com/watch?v=Xbi_o4JGOow',
-    'https://www.youtube.com/watch?v=KudedLV0tP0'
-]
 
+start_time = time.time()
+# Initialize the sentiment analyzer
+analyser = SentimentIntensityAnalyzer()
 # Initialize an empty DataFrame for the output
-result_df = pd.DataFrame(columns=["Comment", "Pred_sentiment"])
-
-data_list = {}
-
-# Initialize a list to store comments and corresponding sentiments
+result_df = pd.DataFrame(columns=["Comment", "Negative", "Neutral", "Positive", "Compound"])
 data_list = []
-
 # Iterate over video links, get comments, and perform sentiment analysis
 for link in video_links:
     video_id = extract_video_id(link)
     if video_id:
         comments = get_video_comments(API_KEY, video_id)
-
         for comment in comments:
             # Perform sentiment analysis on the review text using VADER
-            sentimentData_sentence1 = sentiment_analyzer_scores(comment)
+            negative, neutral, positive, compound = sentiment_analyzer_scores(comment)
 
-            # Assign the sentiment with the highest score as the predicted sentiment
-            pred_sentiment = max(sentimentData_sentence1.items(), key=operator.itemgetter(1))[0]
+            # Append the results to the list of dictionaries
+            data_list.append({"Comment": comment, "Negative": negative, "Neutral": neutral, "Positive": positive, "Compound": compound})
 
-            # Append a list to data_list
-            data_list.append([comment, pred_sentiment])
-
-# Create DataFrame from the list of lists
-result_df = pd.DataFrame(data_list, columns=["Comment", "Pred_sentiment"])
-
-
+# Create DataFrame from the list of dictionaries
+result_df = pd.DataFrame(data_list)
+print(result_df.head(10))
+end_time = time.time()
+# Calculate duration
+duration = end_time - start_time
+print("Runtime: ", duration)
 # Save the output DataFrame to a new CSV file
 result_df.to_csv('data/comments_output_vader.csv', sep=";", index=False)
 print('Comments and sentiment saved to comments_output_vader.csv')
+
+
+
+
+

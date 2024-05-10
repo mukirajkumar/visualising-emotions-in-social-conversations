@@ -1,0 +1,16 @@
+<ion-content>
+  <div class="chart-container">
+    <canvas id="radarChartCanvas"></canvas>
+    <div *ngIf="chartData" class="chart-controls">
+      <div class="sentiment-info">
+        <div class="average-sentiment">
+          <p class="sentiment-score">Average Sentiment Score: {{ commentScore }}</p>
+          <ion-icon class="sentiment-icon" *ngIf="sentimentIcon" [name]="sentimentIcon"></ion-icon>
+        </div>
+        <div class="comment-content">
+          <p>Comment: {{ commentContent }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>
